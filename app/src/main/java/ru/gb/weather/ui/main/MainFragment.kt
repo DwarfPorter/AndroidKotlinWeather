@@ -12,6 +12,7 @@ import com.google.android.material.snackbar.Snackbar
 import ru.gb.weather.AppState
 import ru.gb.weather.R
 import ru.gb.weather.databinding.FragmentMainBinding
+import ru.gb.weather.model.Weather
 
 class MainFragment : Fragment() {
 
@@ -49,7 +50,7 @@ class MainFragment : Fragment() {
             is AppState.Success -> {
                 val weatherData = appState.weatherData
                 binding.loadingLayout.visibility = View.GONE
-                Snackbar.make(binding.mainView, "Success", Snackbar.LENGTH_LONG).show()
+                setData(weatherData)
             }
             is AppState.Loading -> {
                 binding.loadingLayout.visibility = View.VISIBLE
@@ -62,6 +63,17 @@ class MainFragment : Fragment() {
                     .show()
             }
         }
+    }
+
+    private fun setData(weatherData: Weather) {
+        binding.cityName.text = weatherData.city.city
+        binding.cityCoordinates.text = String.format(
+            getString(R.string.city_coordinates),
+            weatherData.city.lat.toString(),
+            weatherData.city.lon.toString()
+        )
+        binding.temperatureValue.text = weatherData.temperature.toString()
+        binding.feelsLikeValue.text = weatherData.feelsLike.toString()
     }
 
     override fun onDestroy() {
