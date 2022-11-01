@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.Observer
+import com.google.android.material.snackbar.Snackbar
+import ru.gb.weather.AppState
 import ru.gb.weather.R
 import ru.gb.weather.databinding.FragmentMainBinding
 
@@ -38,12 +40,28 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val observer = Observer<Any> { renderData(it) }
-        viewModel.getData().observe(viewLifecycleOwner, observer)
+        viewModel.getLiveData().observe(viewLifecycleOwner, Observer { renderData(it) })
+        viewModel.getWeather()
     }
 
-    private fun renderData(data: Any) {
-        Toast.makeText(context, "data", Toast.LENGTH_LONG).show()
+    private fun renderData(appState: AppState) {
+        when (appState) {
+            is AppState.Success -> {
+                val weatherData = appState.weatherData
+                binding.loadingLayout.visibility = View.GONE
+                Snackbar.make(binding.mainView, "Success", Snackbar.LENGTH_LONG).show()
+            }
+            is AppState.Loading -> {
+                binding.loadingLayout.visibility = View.VISIBLE
+            }
+            is AppState.Error -> {
+                binding.loadingLayout.visibility = View.GONE
+                Snackbar
+                    .make(binding.mainView, "Error", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Reload") { viewModel.getWeather() }
+                    .show()
+            }
+        }
     }
 
     override fun onDestroy() {
