@@ -1,7 +1,7 @@
 package ru.gb.weather
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import ru.gb.weather.databinding.ActivityMainBinding
 import ru.gb.weather.ui.main.MainFragment
 
