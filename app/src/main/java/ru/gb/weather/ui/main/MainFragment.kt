@@ -25,8 +25,7 @@ class MainFragment : Fragment() {
     private var isDataSetRus: Boolean = true
     private val adapter = MainFragmentAdapter(object : MainFragmentAdapter.OnItemViewClickListener {
         override fun onItemViewClick(weather: Weather) {
-            val manager = activity?.supportFragmentManager
-            if (manager != null) {
+            activity?.supportFragmentManager?.let { manager ->
                 manager.beginTransaction()
                     .add(R.id.container, DetailsFragment.newInstance(weather))
                     .addToBackStack("")
@@ -45,11 +44,14 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.mainFragmentRecyclerView.adapter = adapter
-        binding.mainFragmentFAB.setOnClickListener { changeWeatherDataSet() }
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-        viewModel.getLiveData().observe(viewLifecycleOwner, Observer { renderData(it) })
-        viewModel.getWeatherFromLocalSourceRus()
+        with(binding) {
+            binding.mainFragmentRecyclerView.adapter = adapter
+            binding.mainFragmentFAB.setOnClickListener { changeWeatherDataSet() }
+        }
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java).apply {
+            getLiveData().observe(viewLifecycleOwner, Observer { renderData(it) })
+            getWeatherFromLocalSourceRus()
+        }
     }
 
     override fun onDestroy() {
@@ -57,16 +59,14 @@ class MainFragment : Fragment() {
         super.onDestroy()
     }
 
-    private fun changeWeatherDataSet() {
+    private fun changeWeatherDataSet() =
         if (isDataSetRus) {
             viewModel.getWeatherFromLocalSourceWorld()
             binding.mainFragmentFAB.setImageResource(R.drawable.ic_earth)
         } else {
             viewModel.getWeatherFromLocalSourceRus()
             binding.mainFragmentFAB.setImageResource(R.drawable.ic_russia)
-        }
-        isDataSetRus = !isDataSetRus
-    }
+        }.also { isDataSetRus = !isDataSetRus }
 
     private fun renderData(appState: AppState) {
         when (appState) {
@@ -79,14 +79,11 @@ class MainFragment : Fragment() {
             }
             is AppState.Error -> {
                 binding.mainFragmentLoadingLayout.visibility = View.GONE
-                Snackbar
-                    .make(
-                        binding.mainFragmentFAB,
-                        getString(R.string.error),
-                        Snackbar.LENGTH_INDEFINITE
-                    )
-                    .setAction(getString(R.string.reload)) { viewModel.getWeatherFromLocalSourceRus() }
-                    .show()
+                binding.root.showSnackBar(
+                    getString(R.string.error),
+                    getString(R.string.reload),
+                    Snackbar.LENGTH_INDEFINITE
+                ) { viewModel.getWeatherFromLocalSourceRus() }
             }
         }
     }
@@ -95,6 +92,15 @@ class MainFragment : Fragment() {
         super.onDestroyView()
         _binding = null
         adapter.removeListener()
+    }
+
+    private fun View.showSnackBar(
+        text: String,
+        actionText: String,
+        length: Int = Snackbar.LENGTH_INDEFINITE,
+        action: (View) -> Unit
+    ) {
+        Snackbar.make(this, text, length).setAction(actionText, action).show()
     }
 
     companion object {
