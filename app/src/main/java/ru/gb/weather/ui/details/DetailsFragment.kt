@@ -18,8 +18,9 @@ class DetailsFragment : Fragment() {
 
         fun newInstance(weather: Weather): DetailsFragment {
             val fragment = DetailsFragment()
-            val bundle = Bundle()
-            bundle.putParcelable(BUNDLE_EXTRA, weather)
+            val bundle = Bundle().also {
+                it.putParcelable(BUNDLE_EXTRA, weather)
+            }
             fragment.arguments = bundle
             return fragment
         }
@@ -32,7 +33,6 @@ class DetailsFragment : Fragment() {
         super.onCreate(savedInstanceState)
     }
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -43,17 +43,20 @@ class DetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val weather = arguments?.getParcelable<Weather>(BUNDLE_EXTRA)
-        if (weather != null) {
-            val city = weather.city
-            binding.cityName.text = city.city
-            binding.cityCoordinates.text = String.format(
-                getString(R.string.city_coordinates),
-                city.lat.toString(),
-                city.lon.toString()
-            )
-            binding.temperatureValue.text = weather.temperature.toString()
-            binding.feelsLikeValue.text = weather.feelsLike.toString()
+        arguments?.getParcelable<Weather>(BUNDLE_EXTRA)?.let { weather ->
+            with(binding)
+            {
+                weather.city.also { city ->
+                    cityName.text = city.city
+                    cityCoordinates.text = String.format(
+                        getString(R.string.city_coordinates),
+                        city.lat.toString(),
+                        city.lon.toString()
+                    )
+                }
+                temperatureValue.text = weather.temperature.toString()
+                feelsLikeValue.text = weather.feelsLike.toString()
+            }
         }
     }
 
