@@ -16,8 +16,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import okhttp3.*
+import ru.gb.weather.AppState
 import ru.gb.weather.BuildConfig
 import ru.gb.weather.R
 import ru.gb.weather.databinding.FragmentDetailsBinding
@@ -35,12 +37,6 @@ import java.net.URL
 import java.util.stream.Collectors
 import javax.net.ssl.HttpsURLConnection
 
-private const val REQUEST_API_KEY = "X-Yandex-API-Key"
-
-private const val TEMP_INVALID = -100
-private const val FEELS_LIKE_INVALID = -100
-private const val PROCESS_ERROR = "Обработка ошибки"
-
 /*
 file apikey.properties
 yandex_weather_api_key = "..."
@@ -51,6 +47,10 @@ class DetailsFragment : Fragment() {
     private var _binding: FragmentDetailsBinding? = null
     private val binding get() = _binding!!
     private lateinit var city: City
+
+    private val viewModel: DetailsViewModel by lazy {
+        ViewModelProvider(this).get(DetailsViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,66 +69,48 @@ class DetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val weather = arguments?.getParcelable(BUNDLE_EXTRA) ?: Weather()
         city = weather.city;
-        getWeather()
+        viewModel.getLiveData().observe(viewLifecycleOwner, { renderData(it) })
+        viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}")
     }
 
-    private fun getWeather() {
-        binding.mainView.hide()
-        binding.loadingLayout.show()
-
-        val client = OkHttpClient() // Клиент
-        val builder: Request.Builder = Request.Builder() // Создаём строителя запроса
-        builder.header(REQUEST_API_KEY, BuildConfig.WEATHER_API_KEY) // Создаём заголовок запроса
-        builder.url("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}") // Формируем URL
-        val request: Request = builder.build() // Создаём запрос
-        val call: Call = client.newCall(request) // Ставим запрос в очередь и отправляем
-        call.enqueue(object : Callback {
-
-            val handler: Handler = Handler(Looper.myLooper()!!)
-
-            // Вызывается, если ответ от сервера пришёл
-            @Throws(IOException::class)
-            override fun onResponse(call: Call?, response: Response) {
-                val serverResponse: String? = response.body()?.string()
-                // Синхронизируем поток с потоком UI
-                if (response.isSuccessful && serverResponse != null) {
-                    handler.post {
-                        renderData(Gson().fromJson(serverResponse, WeatherDTO::class.java))
-                    }
-                } else {
-                    TODO(PROCESS_ERROR)
-                }
-            }
-
-            // Вызывается при сбое в процессе запроса на сервер
-            override fun onFailure(call: Call?, e: IOException?) {
-                TODO(PROCESS_ERROR)
-            }
-        })
-    }
-
-    private fun renderData(weatherDTO: WeatherDTO) {
+    private fun renderData(appState: AppState) {
         binding.mainView.show()
         binding.loadingLayout.hide()
+        when (appState) {
+            is AppState.Success -> {
+                binding.mainView.show()
+                binding.loadingLayout.hide()
+                setWeather(appState.weatherData[0])
+            }
+            is AppState.Loading -> {
+                binding.mainView.hide()
+                binding.loadingLayout.show()
+            }
+            is AppState.Error -> {
+                binding.mainView.show()
+                binding.loadingLayout.hide()
+                binding.mainView.showSnackBar(
+                    getString(R.string.error),
+                    getString(R.string.reload),
+                    { viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}") })
+            }
+        }
+    }
 
-        val fact = weatherDTO.fact
-        val temp = fact!!.temp
-        val feelsLike = fact.feels_like
-        val condition = fact.condition
-        if (temp == TEMP_INVALID || feelsLike == FEELS_LIKE_INVALID || condition == null) {
-            TODO(PROCESS_ERROR)
-        } else {
-            with(binding) {
+    private fun setWeather(weather: Weather) {
+        with(binding) {
+            city.let { city ->
                 cityName.text = city.city
                 cityCoordinates.text = String.format(
                     getString(R.string.city_coordinates),
                     city.lat.toString(),
                     city.lon.toString()
                 )
-                temperatureValue.text = temp.toString()
-                feelsLikeValue.text = feelsLike.toString()
-                weatherCondition.text = condition
             }
+
+            temperatureValue.text = weather.temperature.toString()
+            feelsLikeValue.text = weather.feelsLike.toString()
+            weatherCondition.text = weather.condition
         }
     }
 
@@ -158,4 +140,14 @@ class DetailsFragment : Fragment() {
         this.visibility = View.GONE;
     }
 
+    fun View.showSnackBar(
+        text: String,
+        actionText: String,
+        action: (View) -> Unit,
+        length: Int = Snackbar.LENGTH_INDEFINITE
+    ) {
+        Snackbar.make(this, text, length).setAction(actionText, action).show()
+    }
 }
+
+
