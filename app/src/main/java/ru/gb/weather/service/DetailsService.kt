@@ -1,5 +1,6 @@
 package ru.gb.weather.service
 
+
 import android.app.IntentService
 import android.content.Intent
 import android.os.Build
@@ -29,7 +30,7 @@ class DetailsService(name: String = "DetailService") : IntentService(name) {
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onHandleIntent(intent: Intent?) {
-        if (intent == null) {
+        if (intent == null){
             onEmptyIntent()
         } else {
             val lat = intent.getDoubleExtra(LATITUDE_EXTRA, 0.0)
@@ -112,18 +113,17 @@ class DetailsService(name: String = "DetailService") : IntentService(name) {
         LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
     }
 
-    private fun onEmptyIntent() {
-        putLoadResult(DETAILS_INTENT_EMPTY_EXTRA)
-        LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
-    }
-
     private fun onEmptyData() {
         putLoadResult(DETAILS_DATA_EMPTY_EXTRA)
         LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
     }
 
-    private fun putLoadResult(result: String) {
+    private fun onEmptyIntent() {
+        putLoadResult(DETAILS_INTENT_EMPTY_EXTRA)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
+    }
+    
+    private fun putLoadResult(result: String) 
         broadcastIntent.putExtra(DETAILS_LOAD_RESULT_EXTRA, result)
-
     }
 }

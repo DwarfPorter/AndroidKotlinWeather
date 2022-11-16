@@ -59,7 +59,6 @@ yandex_weather_api_key = "..."
 
 class DetailsFragment : Fragment() {
 
-
     private var _binding: FragmentDetailsBinding? = null
     private val binding get() = _binding!!
     private lateinit var city: City
@@ -91,6 +90,11 @@ class DetailsFragment : Fragment() {
         }
     }
 
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -100,7 +104,6 @@ class DetailsFragment : Fragment() {
             LocalBroadcastManager.getInstance(it)
                 .registerReceiver(loadResultsReceiver, IntentFilter(DETAILS_INTENT_FILTER))
         }
-
         return binding.root
     }
 
@@ -108,7 +111,7 @@ class DetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val weather = arguments?.getParcelable(BUNDLE_EXTRA) ?: Weather()
-        city = weather.city
+        city = weather.city;
         getWeather()
     }
 
@@ -140,29 +143,26 @@ class DetailsFragment : Fragment() {
         if (temp == TEMP_INVALID || feelsLike == FEELS_LIKE_INVALID || condition == null) {
             TODO(PROCESS_ERROR)
         } else {
-            binding.cityName.text = city.city
-            binding.cityCoordinates.text = String.format(
-                getString(R.string.city_coordinates),
-                city.lat.toString(),
-                city.lon.toString()
-            )
-            binding.temperatureValue.text = temp.toString()
-            binding.feelsLikeValue.text = feelsLike.toString()
-            binding.weatherCondition.text = condition
+            with(binding) {
+                cityName.text = city.city
+                cityCoordinates.text = String.format(
+                    getString(R.string.city_coordinates),
+                    city.lat.toString(),
+                    city.lon.toString()
+                )
+                temperatureValue.text = temp.toString()
+                feelsLikeValue.text = feelsLike.toString()
+                weatherCondition.text = condition
+            }
         }
     }
 
     override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
         context?.let {
             LocalBroadcastManager.getInstance(it).unregisterReceiver(loadResultsReceiver)
         }
-        super.onDestroyView()
-    }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _binding = null
     }
 
     companion object {
@@ -178,11 +178,12 @@ class DetailsFragment : Fragment() {
         }
     }
 
-    fun View.show(){
+    private fun View.show() {
         this.visibility = View.VISIBLE
     }
 
-    fun View.hide(){
+    private fun View.hide() {
         this.visibility = View.GONE;
     }
+
 }
