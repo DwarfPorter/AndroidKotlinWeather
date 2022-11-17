@@ -16,8 +16,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import coil.api.load
+import com.bumptech.glide.Glide
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
+import com.squareup.picasso.Picasso
 import okhttp3.*
 import ru.gb.weather.AppState
 import ru.gb.weather.BuildConfig
@@ -116,6 +119,18 @@ class DetailsFragment : Fragment() {
             temperatureValue.text = weather.temperature.toString()
             feelsLikeValue.text = weather.feelsLike.toString()
             weatherCondition.text = weather.condition
+
+//            Picasso
+//                .get()
+//                .load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
+//                .into(headerIcon)
+
+//            Glide.with(requireActivity())
+//                .load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
+//                .into(headerIcon);
+
+            headerIcon.load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
+
         }
     }
 
