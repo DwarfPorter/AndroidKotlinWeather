@@ -73,7 +73,7 @@ class DetailsFragment : Fragment() {
         val weather = arguments?.getParcelable(BUNDLE_EXTRA) ?: Weather()
         city = weather.city;
         viewModel.getLiveData().observe(viewLifecycleOwner, { renderData(it) })
-        viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}")
+        viewModel.getWeatherFromRemoteSource(city.lat, city.lon)
     }
 
     private fun renderData(appState: AppState) {
@@ -95,8 +95,8 @@ class DetailsFragment : Fragment() {
                 binding.mainView.showSnackBar(
                     getString(R.string.error),
                     getString(R.string.reload)
-                ){
-                    viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}")
+                ) {
+                    viewModel.getWeatherFromRemoteSource(city.lat, city.lon)
                 }
             }
         }
