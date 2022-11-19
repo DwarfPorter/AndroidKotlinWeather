@@ -123,7 +123,7 @@ class DetailsService(name: String = "DetailService") : IntentService(name) {
         LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
     }
     
-    private fun putLoadResult(result: String) 
+    private fun putLoadResult(result: String) {
         broadcastIntent.putExtra(DETAILS_LOAD_RESULT_EXTRA, result)
     }
 }
