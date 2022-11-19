@@ -80,7 +80,7 @@ class DetailsFragment : Fragment() {
         city = weather.city;
 
         viewModel.getLiveData().observe(viewLifecycleOwner) { renderData(it) }
-        viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}")
+        viewModel.getWeatherFromRemoteSource(city.lat, city.lon)
     }
 
     private fun renderData(appState: AppState) {
@@ -104,7 +104,7 @@ class DetailsFragment : Fragment() {
                     getString(R.string.error),
                     getString(R.string.reload)
                 ) {
-                    viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}")
+                    viewModel.getWeatherFromRemoteSource(city.lat, city.lon)
                 }
             }
         }
