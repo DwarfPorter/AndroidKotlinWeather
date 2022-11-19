@@ -13,6 +13,7 @@ import ru.gb.weather.model.data.FactDTO
 import ru.gb.weather.model.data.WeatherDTO
 import ru.gb.weather.model.getDefaultCity
 import java.io.IOException
+import ru.gb.weather.utils.*
 
 private const val SERVER_ERROR = "Ошибка сервера"
 private const val REQUEST_ERROR = "Ошибка запроса на сервер"
@@ -56,10 +57,5 @@ class DetailsViewModel(
                 AppState.Success(convertDtoToModel(weatherDTO))
             }
         }
-    }
-
-    private fun convertDtoToModel(weatherDTO: WeatherDTO): List<Weather> {
-        val fact: FactDTO = weatherDTO.fact!!
-        return listOf(Weather(getDefaultCity(), fact.temp!!, fact.feels_like!!, fact.condition!!))
     }
 }
