@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.gson.Gson
+import okhttp3.*
 import ru.gb.weather.BuildConfig
 import ru.gb.weather.R
 import ru.gb.weather.databinding.FragmentDetailsBinding
@@ -25,32 +26,20 @@ import ru.gb.weather.model.Weather
 import ru.gb.weather.model.data.FactDTO
 import ru.gb.weather.model.data.WeatherDTO
 import ru.gb.weather.model.data.mapTo
-import ru.gb.weather.service.DetailsService
-import ru.gb.weather.service.LATITUDE_EXTRA
-import ru.gb.weather.service.LONGITUDE_EXTRA
 import ru.gb.weather.ui.main.MainViewModel
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.stream.Collectors
 import javax.net.ssl.HttpsURLConnection
 
-const val DETAILS_INTENT_FILTER = "DETAILS INTENT FILTER"
-const val DETAILS_LOAD_RESULT_EXTRA = "LOAD RESULT"
-const val DETAILS_INTENT_EMPTY_EXTRA = "INTENT IS EMPTY"
-const val DETAILS_DATA_EMPTY_EXTRA = "DATA IS EMPTY"
-const val DETAILS_RESPONSE_EMPTY_EXTRA = "RESPONSE IS EMPTY"
-const val DETAILS_REQUEST_ERROR_EXTRA = "REQUEST ERROR"
-const val DETAILS_REQUEST_ERROR_MESSAGE_EXTRA = "REQUEST ERROR MESSAGE"
-const val DETAILS_URL_MALFORMED_EXTRA = "URL MALFORMED"
-const val DETAILS_RESPONSE_SUCCESS_EXTRA = "RESPONSE SUCCESS"
-const val DETAILS_TEMP_EXTRA = "TEMPERATURE"
-const val DETAILS_FEELS_LIKE_EXTRA = "FEELS LIKE"
-const val DETAILS_CONDITION_EXTRA = "CONDITION"
 private const val TEMP_INVALID = -100
 private const val FEELS_LIKE_INVALID = -100
 private const val PROCESS_ERROR = "Обработка ошибки"
+
+private const val REQUEST_API_KEY = "X-Yandex-API-Key"
 
 /*
 file apikey.properties
@@ -63,34 +52,6 @@ class DetailsFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var city: City
 
-    private val loadResultsReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.getStringExtra(DETAILS_LOAD_RESULT_EXTRA)) {
-                DETAILS_INTENT_EMPTY_EXTRA -> TODO(PROCESS_ERROR)
-                DETAILS_DATA_EMPTY_EXTRA -> TODO(PROCESS_ERROR)
-                DETAILS_RESPONSE_EMPTY_EXTRA -> TODO(PROCESS_ERROR)
-                DETAILS_REQUEST_ERROR_EXTRA -> TODO(PROCESS_ERROR)
-                DETAILS_REQUEST_ERROR_MESSAGE_EXTRA -> TODO(PROCESS_ERROR)
-                DETAILS_URL_MALFORMED_EXTRA -> TODO(PROCESS_ERROR)
-                DETAILS_RESPONSE_SUCCESS_EXTRA -> renderData(
-                    WeatherDTO(
-                        FactDTO(
-                            intent.getIntExtra(
-                                DETAILS_TEMP_EXTRA, TEMP_INVALID
-                            ),
-                            intent.getIntExtra(DETAILS_FEELS_LIKE_EXTRA, FEELS_LIKE_INVALID),
-                            intent.getStringExtra(
-                                DETAILS_CONDITION_EXTRA
-                            )
-                        )
-                    )
-                )
-                else -> TODO(PROCESS_ERROR)
-            }
-        }
-    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -100,10 +61,6 @@ class DetailsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentDetailsBinding.inflate(inflater, container, false)
-        requireActivity().let {
-            LocalBroadcastManager.getInstance(it)
-                .registerReceiver(loadResultsReceiver, IntentFilter(DETAILS_INTENT_FILTER))
-        }
         return binding.root
     }
 
@@ -118,18 +75,34 @@ class DetailsFragment : Fragment() {
     private fun getWeather() {
         binding.mainView.hide()
         binding.loadingLayout.show()
-        context?.let {
-            it.startService(Intent(it, DetailsService::class.java).apply {
-                putExtra(
-                    LATITUDE_EXTRA,
-                    city.lat
-                )
-                putExtra(
-                    LONGITUDE_EXTRA,
-                    city.lon
-                )
-            })
-        }
+
+        val client = OkHttpClient() // Клиент
+        val builder: Request.Builder = Request.Builder() // Создаём строителя запроса
+        builder.header(REQUEST_API_KEY, BuildConfig.WEATHER_API_KEY) // Создаём заголовок запроса
+        builder.url("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}") // Формируем URL
+        val request: Request = builder.build() // Создаём запрос
+        val call: Call = client.newCall(request) // Ставим запрос в очередь и отправляем
+        call.enqueue(object : Callback {
+            val handler: Handler = Handler(Looper.myLooper()!!)
+
+            // Вызывается, если ответ от сервера пришёл
+            @Throws(IOException::class)
+            override fun onResponse(call: Call?, response: Response) {
+                val serverResponse: String? = response.body()?.string()
+                if (response.isSuccessful && serverResponse != null) {
+                    handler.post {
+                        renderData(Gson().fromJson(serverResponse, WeatherDTO::class.java))
+                    }
+                } else {
+                    TODO(PROCESS_ERROR)
+                }
+            }
+
+            // Вызывается при сбое в процессе запроса на сервер
+            override fun onFailure(call: Call?, e: IOException?) {
+                TODO(PROCESS_ERROR)
+            }
+        })
     }
 
     private fun renderData(weatherDTO: WeatherDTO) {
@@ -160,9 +133,6 @@ class DetailsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        context?.let {
-            LocalBroadcastManager.getInstance(it).unregisterReceiver(loadResultsReceiver)
-        }
     }
 
     companion object {
