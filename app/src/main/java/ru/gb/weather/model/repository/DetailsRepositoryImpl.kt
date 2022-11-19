@@ -1,15 +1,13 @@
 package ru.gb.weather.model.repository
 
+import retrofit2.Callback
 import ru.gb.weather.model.data.WeatherDTO
 
-
-class DetailsRepositoryImpl(private val remoteDataSource: RemoteDataSource) :
-    DetailsRepository {
-
+class DetailsRepositoryImpl(private val remoteDataSource: RemoteDataSource) : DetailsRepository {
     override fun getWeatherDetailsFromServer(
         lat: Double,
         lon: Double,
-        callback: retrofit2.Callback<WeatherDTO>
+        callback: Callback<WeatherDTO>
     ) {
         remoteDataSource.getWeatherDetails(lat, lon, callback)
     }

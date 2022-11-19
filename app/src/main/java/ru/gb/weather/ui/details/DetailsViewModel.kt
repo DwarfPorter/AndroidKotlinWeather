@@ -12,20 +12,17 @@ import ru.gb.weather.model.Weather
 import ru.gb.weather.model.data.FactDTO
 import ru.gb.weather.model.data.WeatherDTO
 import ru.gb.weather.model.getDefaultCity
-import ru.gb.weather.utils.convertDtoToModel
 import java.io.IOException
-
+import ru.gb.weather.utils.*
 
 private const val SERVER_ERROR = "Ошибка сервера"
 private const val REQUEST_ERROR = "Ошибка запроса на сервер"
 private const val CORRUPTED_DATA = "Неполные данные"
 
-class DetailsViewModel(private val detailsLiveData: MutableLiveData<AppState> = MutableLiveData(),
-                       private val detailsRepositoryImpl: DetailsRepository = DetailsRepositoryImpl(
-                              RemoteDataSource()
-                          )
+class DetailsViewModel(
+    private val detailsLiveData: MutableLiveData<AppState> = MutableLiveData(),
+    private val detailsRepositoryImpl: DetailsRepository = DetailsRepositoryImpl(RemoteDataSource())
 ) : ViewModel() {
-
     fun getLiveData() = detailsLiveData
 
     fun getWeatherFromRemoteSource(lat: Double, lon: Double) {
@@ -35,6 +32,7 @@ class DetailsViewModel(private val detailsLiveData: MutableLiveData<AppState> = 
 
     private val callBack = object : Callback<WeatherDTO> {
 
+        @Throws(IOException::class)
         override fun onResponse(call: Call<WeatherDTO>, response: Response<WeatherDTO>) {
             val serverResponse: WeatherDTO? = response.body()
             detailsLiveData.postValue(
@@ -50,12 +48,12 @@ class DetailsViewModel(private val detailsLiveData: MutableLiveData<AppState> = 
             detailsLiveData.postValue(AppState.Error(Throwable(t.message ?: REQUEST_ERROR)))
         }
 
-        private fun checkResponse(serverResponse: WeatherDTO): AppState {
-            val fact = serverResponse.fact
+        private fun checkResponse(weatherDTO: WeatherDTO): AppState {
+            val fact = weatherDTO.fact
             return if (fact == null || fact.temp == null || fact.feels_like == null || fact.condition.isNullOrEmpty()) {
                 AppState.Error(Throwable(CORRUPTED_DATA))
             } else {
-                AppState.Success(convertDtoToModel(serverResponse))
+                AppState.Success(convertDtoToModel(weatherDTO))
             }
         }
     }

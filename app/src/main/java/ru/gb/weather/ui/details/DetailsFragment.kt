@@ -43,6 +43,12 @@ import java.net.URL
 import java.util.stream.Collectors
 import javax.net.ssl.HttpsURLConnection
 
+private const val TEMP_INVALID = -100
+private const val FEELS_LIKE_INVALID = -100
+private const val PROCESS_ERROR = "Обработка ошибки"
+
+private const val REQUEST_API_KEY = "X-Yandex-API-Key"
+
 /*
 file apikey.properties
 yandex_weather_api_key = "..."
@@ -75,13 +81,15 @@ class DetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val weather = arguments?.getParcelable(BUNDLE_EXTRA) ?: Weather()
         city = weather.city;
-        viewModel.getLiveData().observe(viewLifecycleOwner, { renderData(it) })
+
+        viewModel.getLiveData().observe(viewLifecycleOwner) { renderData(it) }
         viewModel.getWeatherFromRemoteSource(city.lat, city.lon)
     }
 
     private fun renderData(appState: AppState) {
         binding.mainView.show()
         binding.loadingLayout.hide()
+
         when (appState) {
             is AppState.Success -> {
                 binding.mainView.show()
@@ -120,8 +128,7 @@ class DetailsFragment : Fragment() {
             feelsLikeValue.text = weather.feelsLike.toString()
             weatherCondition.text = weather.condition
 
-//            Picasso
-//                .get()
+//            Picasso.get()
 //                .load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
 //                .into(headerIcon)
 
@@ -130,7 +137,6 @@ class DetailsFragment : Fragment() {
 //                .into(headerIcon);
 
             headerIcon.load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
-
         }
     }
 
@@ -152,5 +158,3 @@ class DetailsFragment : Fragment() {
         }
     }
 }
-
-
