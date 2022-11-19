@@ -29,6 +29,9 @@ import ru.gb.weather.model.data.FactDTO
 import ru.gb.weather.model.data.WeatherDTO
 import ru.gb.weather.model.data.mapTo
 import ru.gb.weather.ui.main.MainViewModel
+import ru.gb.weather.utils.hide
+import ru.gb.weather.utils.show
+import ru.gb.weather.utils.showSnackBar
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -99,8 +102,10 @@ class DetailsFragment : Fragment() {
                 binding.loadingLayout.hide()
                 binding.mainView.showSnackBar(
                     getString(R.string.error),
-                    getString(R.string.reload),
-                    { viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}") })
+                    getString(R.string.reload)
+                ) {
+                    viewModel.getWeatherFromRemoteSource("https://api.weather.yandex.ru/v2/informers?lat=${city.lat}&lon=${city.lon}")
+                }
             }
         }
     }
@@ -122,15 +127,6 @@ class DetailsFragment : Fragment() {
         }
     }
 
-    fun View.showSnackBar(
-        text: String,
-        actionText: String,
-        action: (View) -> Unit,
-        length: Int = Snackbar.LENGTH_INDEFINITE
-    ) {
-        Snackbar.make(this, text, length).setAction(actionText, action).show()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -148,13 +144,4 @@ class DetailsFragment : Fragment() {
             return fragment
         }
     }
-
-    private fun View.show() {
-        this.visibility = View.VISIBLE
-    }
-
-    private fun View.hide() {
-        this.visibility = View.GONE;
-    }
-
 }

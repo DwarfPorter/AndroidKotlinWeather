@@ -15,6 +15,9 @@ import ru.gb.weather.R
 import ru.gb.weather.databinding.FragmentMainBinding
 import ru.gb.weather.model.Weather
 import ru.gb.weather.ui.details.DetailsFragment
+import ru.gb.weather.utils.hide
+import ru.gb.weather.utils.show
+import ru.gb.weather.utils.showSnackBar
 
 
 class MainFragment : Fragment() {
@@ -71,14 +74,14 @@ class MainFragment : Fragment() {
     private fun renderData(appState: AppState) {
         when (appState) {
             is AppState.Success -> {
-                binding.mainFragmentLoadingLayout.visibility = View.GONE
+                binding.mainFragmentLoadingLayout.hide()
                 adapter.setWeather(appState.weatherData)
             }
             is AppState.Loading -> {
-                binding.mainFragmentLoadingLayout.visibility = View.VISIBLE
+                binding.mainFragmentLoadingLayout.show()
             }
             is AppState.Error -> {
-                binding.mainFragmentLoadingLayout.visibility = View.GONE
+                binding.mainFragmentLoadingLayout.hide()
                 binding.root.showSnackBar(
                     getString(R.string.error),
                     getString(R.string.reload),
@@ -92,15 +95,6 @@ class MainFragment : Fragment() {
         super.onDestroyView()
         _binding = null
         adapter.removeListener()
-    }
-
-    private fun View.showSnackBar(
-        text: String,
-        actionText: String,
-        length: Int = Snackbar.LENGTH_INDEFINITE,
-        action: (View) -> Unit
-    ) {
-        Snackbar.make(this, text, length).setAction(actionText, action).show()
     }
 
     companion object {
