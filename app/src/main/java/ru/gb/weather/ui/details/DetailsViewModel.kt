@@ -4,14 +4,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import ru.gb.weather.AppState
-import ru.gb.weather.model.repository.DetailsRepository
-import ru.gb.weather.model.repository.DetailsRepositoryImpl
-import ru.gb.weather.model.repository.RemoteDataSource
 import retrofit2.*
+import ru.gb.weather.App.Companion.getHistoryDao
 import ru.gb.weather.model.Weather
 import ru.gb.weather.model.data.FactDTO
 import ru.gb.weather.model.data.WeatherDTO
 import ru.gb.weather.model.getDefaultCity
+import ru.gb.weather.model.repository.*
 import java.io.IOException
 import ru.gb.weather.utils.*
 
@@ -21,13 +20,18 @@ private const val CORRUPTED_DATA = "Неполные данные"
 
 class DetailsViewModel(
     private val detailsLiveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val detailsRepositoryImpl: DetailsRepository = DetailsRepositoryImpl(RemoteDataSource())
+    private val detailsRepositoryImpl: DetailsRepository = DetailsRepositoryImpl(RemoteDataSource()),
+    private val historyRepository: LocalRepository = LocalRepositoryImpl(getHistoryDao())
 ) : ViewModel() {
     fun getLiveData() = detailsLiveData
 
     fun getWeatherFromRemoteSource(lat: Double, lon: Double) {
         detailsLiveData.value = AppState.Loading
         detailsRepositoryImpl.getWeatherDetailsFromServer(lat, lon, callBack)
+    }
+
+    fun saveCityToDB(weather: Weather) {
+        historyRepository.saveEntity(weather)
     }
 
     private val callBack = object : Callback<WeatherDTO> {
