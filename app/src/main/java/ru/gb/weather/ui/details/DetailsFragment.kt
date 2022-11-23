@@ -128,6 +128,8 @@ class DetailsFragment : Fragment() {
             feelsLikeValue.text = weather.feelsLike.toString()
             weatherCondition.text = weather.condition
 
+            saveCity(city, weather)
+
 //            Picasso.get()
 //                .load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
 //                .into(headerIcon)
@@ -138,6 +140,10 @@ class DetailsFragment : Fragment() {
 
             headerIcon.load("https://freepngimg.com/thumb/city/36275-3-city-hd.png")
         }
+    }
+
+    private fun saveCity(city: City, weather: Weather){
+        viewModel.saveCityToDb(Weather(city, weather.temperature, weather.feelsLike, weather.condition))
     }
 
     override fun onDestroyView() {
