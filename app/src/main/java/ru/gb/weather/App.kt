@@ -13,7 +13,6 @@ class App : Application() {
     }
 
     companion object {
-
         private var appInstance: App? = null
         private var db: HistoryDataBase? = null
         private const val DB_NAME = "History.db"
@@ -22,11 +21,13 @@ class App : Application() {
             if (db == null) {
                 synchronized(HistoryDataBase::class.java) {
                     if (db == null) {
-                        if (appInstance == null) throw IllegalStateException("Application is null while creating DataBase")
+                        if (appInstance == null)
+                            throw IllegalStateException("Application is null while creating DB")
                         db = Room.databaseBuilder(
                             appInstance!!.applicationContext,
                             HistoryDataBase::class.java,
-                            DB_NAME)
+                            DB_NAME
+                        )
                             .allowMainThreadQueries()
                             .build()
                     }
@@ -35,5 +36,6 @@ class App : Application() {
 
             return db!!.historyDao()
         }
+
     }
 }

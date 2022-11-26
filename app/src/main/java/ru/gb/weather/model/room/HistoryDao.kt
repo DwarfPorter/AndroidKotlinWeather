@@ -1,6 +1,11 @@
 package ru.gb.weather.model.room
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface HistoryDao {
@@ -12,7 +17,7 @@ interface HistoryDao {
     fun getDataByWord(city: String): List<HistoryEntity>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(entity: HistoryEntity)
+    fun insert (entity: HistoryEntity)
 
     @Update
     fun update(entity: HistoryEntity)

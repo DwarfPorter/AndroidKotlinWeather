@@ -16,11 +16,8 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
-        val binding = HistoryRecyclerItemBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+        val binding =
+            HistoryRecyclerItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return HistoryViewHolder(binding)
     }
 
@@ -28,19 +25,18 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() 
         holder.bind(data[position])
     }
 
-    override fun getItemCount(): Int {
-        return data.size
-    }
+    override fun getItemCount() = data.size
 
     inner class HistoryViewHolder(private val binding: HistoryRecyclerItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(data: Weather) {
-            binding.apply{
+            binding.apply {
                 cityName.text = data.city.city
                 weatherCondition.text = data.condition
                 weatherTemperature.text = data.temperature.toString()
             }
         }
+
     }
 }

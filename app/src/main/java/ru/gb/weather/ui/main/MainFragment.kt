@@ -50,16 +50,20 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
-            mainFragmentRecyclerView.adapter = adapter
-            mainFragmentFAB.setOnClickListener {
+            binding.mainFragmentRecyclerView.adapter = adapter
+            binding.mainFragmentFAB.setOnClickListener {
                 changeWeatherDataSet()
                 saveListOfTowns()
             }
         }
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java).apply {
-            getLiveData().observe(viewLifecycleOwner, Observer { renderData(it) })
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        showListOfTowns();
+
+        val observer = Observer<AppState> { a ->
+            renderData(a)
         }
-        showListOfTowns()
+
+        viewModel.getLiveData().observe(viewLifecycleOwner, observer)
     }
 
     private fun showListOfTowns() {
@@ -78,6 +82,11 @@ class MainFragment : Fragment() {
         }
     }
 
+    private fun changeWeatherDataSet() {
+        isDataSetRus = !isDataSetRus
+        showWeatherDataSet()
+    }
+
     private fun showWeatherDataSet() {
         if (isDataSetRus) {
             viewModel.getWeatherFromLocalSourceRus()
@@ -88,15 +97,9 @@ class MainFragment : Fragment() {
         }
     }
 
-
     override fun onDestroy() {
         adapter.removeListener()
         super.onDestroy()
-    }
-
-    private fun changeWeatherDataSet() {
-        isDataSetRus = !isDataSetRus
-        showWeatherDataSet()
     }
 
     private fun renderData(appState: AppState) {

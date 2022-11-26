@@ -30,7 +30,7 @@ class DetailsViewModel(
         detailsRepositoryImpl.getWeatherDetailsFromServer(lat, lon, callBack)
     }
 
-    fun saveCityToDB(weather: Weather) {
+    fun saveCityToDb(weather: Weather) {
         historyRepository.saveEntity(weather)
     }
 

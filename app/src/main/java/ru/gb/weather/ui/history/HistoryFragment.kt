@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import ru.gb.weather.App
 import ru.gb.weather.AppState
 import ru.gb.weather.R
 import ru.gb.weather.databinding.HistoryFragmentBinding
@@ -20,12 +21,14 @@ class HistoryFragment : Fragment() {
     private val viewModel: HistoryViewModel by lazy {
         ViewModelProvider(this).get(HistoryViewModel::class.java)
     }
+
     private val adapter: HistoryAdapter by lazy {
         HistoryAdapter()
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = HistoryFragmentBinding.inflate(inflater, container, false)
@@ -55,10 +58,10 @@ class HistoryFragment : Fragment() {
                 binding.includedLoadingLayout.loadingLayout.hide()
                 binding.historyFragmentRecyclerview.showSnackBar(
                     getString(R.string.error),
-                    getString(R.string.reload))
-                    {
-                        viewModel.getAllHistory()
-                    }
+                    getString(R.string.reload)
+                ) {
+                    viewModel.getAllHistory()
+                }
             }
         }
     }

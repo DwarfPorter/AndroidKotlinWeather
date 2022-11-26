@@ -10,8 +10,7 @@ import ru.gb.weather.model.repository.LocalRepositoryImpl
 class HistoryViewModel(
     val historyLiveData: MutableLiveData<AppState> = MutableLiveData(),
     private val historyRepository: LocalRepository = LocalRepositoryImpl(getHistoryDao())
-) : ViewModel() {
-
+) : ViewModel(){
     fun getAllHistory() {
         historyLiveData.value = AppState.Loading
         historyLiveData.value = AppState.Success(historyRepository.getAllHistory())
