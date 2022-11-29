@@ -9,6 +9,7 @@ import android.net.Uri
 import ru.gb.weather.App.Companion.getHistoryDao
 import ru.gb.weather.model.room.*
 
+
 private const val URI_ALL = 1 // URI для всех записей
 private const val URI_ID = 2 // URI для конкретной записи
 private const val ENTITY_PATH =
@@ -23,44 +24,6 @@ class HistoryWeatherContentProvider : ContentProvider() {
     private var entityContentItemType: String? = null // Одна строка
 
     private lateinit var contentUri: Uri // Адрес URI Provider
-
-    // Удаляем запись
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-        require(uriMatcher.match(uri) == URI_ID) { "Wrong URI: $uri" }
-        // Получаем доступ к данным
-        val historyDao = getHistoryDao()
-        // Получаем идентификатор записи по адресу
-        val id = ContentUris.parseId(uri)
-        // Удаляем запись по идентификатору
-        historyDao.deleteById(id)
-        // Нотификация на изменение Cursor
-        context?.contentResolver?.notifyChange(uri, null)
-        return 1
-    }
-
-    // Provider требует переопределения этого метода, чтобы понимать тип запроса
-    override fun getType(uri: Uri): String? {
-        when (uriMatcher.match(uri)) {
-            URI_ALL -> return entityContentType
-            URI_ID -> return entityContentItemType
-        }
-        return null
-    }
-
-    // Добавляем новую запись
-    override fun insert(uri: Uri, values: ContentValues?): Uri? {
-        require(uriMatcher.match(uri) == URI_ALL) { "Wrong URI: $uri" }
-        // Получаем доступ к данным
-        val historyDao = getHistoryDao()
-        // Добавляем запись о городе
-        val entity = map(values)
-        val id: Long = entity.id
-        historyDao.insert(entity)
-        val resultUri = ContentUris.withAppendedId(contentUri, id)
-        // Уведомляем ContentResolver, что данные по адресу resultUri изменились
-        context?.contentResolver?.notifyChange(resultUri, null)
-        return resultUri
-    }
 
     override fun onCreate(): Boolean {
         authorities = "geekbrains.provider"
@@ -77,6 +40,14 @@ class HistoryWeatherContentProvider : ContentProvider() {
         // Строка для доступа к Provider
         contentUri = Uri.parse("content://$authorities/$ENTITY_PATH")
         return true
+    }
+
+    override fun getType(uri: Uri): String? {
+        when (uriMatcher.match(uri)) {
+            URI_ALL -> return entityContentType
+            URI_ID -> return entityContentItemType
+        }
+        return null
     }
 
     override fun query(
@@ -101,7 +72,33 @@ class HistoryWeatherContentProvider : ContentProvider() {
         return cursor
     }
 
-    // Обновляем данные в строке таблицы
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
+        require(uriMatcher.match(uri) == URI_ID) { "Wrong URI: $uri" }
+        // Получаем доступ к данным
+        val historyDao = getHistoryDao()
+        // Получаем идентификатор записи по адресу
+        val id = ContentUris.parseId(uri)
+        // Удаляем запись по идентификатору
+        historyDao.deleteById(id)
+        // Нотификация на изменение Cursor
+        context?.contentResolver?.notifyChange(uri, null)
+        return 1
+    }
+
+    override fun insert(uri: Uri, values: ContentValues?): Uri? {
+        require(uriMatcher.match(uri) == URI_ALL) { "Wrong URI: $uri" }
+        // Получаем доступ к данным
+        val historyDao = getHistoryDao()
+        // Добавляем запись о городе
+        val entity = map(values)
+        val id: Long = entity.id
+        historyDao.insert(entity)
+        val resultUri = ContentUris.withAppendedId(contentUri, id)
+        // Уведомляем ContentResolver, что данные по адресу resultUri изменились
+        context?.contentResolver?.notifyChange(resultUri, null)
+        return resultUri
+    }
+
     override fun update(
         uri: Uri, values: ContentValues?, selection: String?,
         selectionArgs: Array<String>?
@@ -125,5 +122,4 @@ class HistoryWeatherContentProvider : ContentProvider() {
             HistoryEntity(id, city, temperature, "")
         }
     }
-
 }
