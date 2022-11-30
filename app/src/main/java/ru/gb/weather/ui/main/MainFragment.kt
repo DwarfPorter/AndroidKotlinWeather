@@ -32,6 +32,7 @@ import ru.gb.weather.utils.showSnackBar
 import java.io.IOException
 
 private const val IS_RUSSIAN_KEY = "LIST_OF_RUSSIAN_KEY"
+
 private const val REFRESH_PERIOD = 60000L
 private const val MINIMAL_DISTANCE = 100f
 
@@ -58,12 +59,12 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         with(binding) {
-            mainFragmentRecyclerView.adapter = adapter
-            mainFragmentFAB.setOnClickListener {
+            binding.mainFragmentRecyclerView.adapter = adapter
+            binding.mainFragmentFAB.setOnClickListener {
                 changeWeatherDataSet()
                 saveListOfTowns()
             }
-            mainFragmentFABLocation.setOnClickListener { checkPermission() }
+            binding.mainFragmentFABLocation.setOnClickListener { checkPermission() }
         }
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         showListOfTowns();
@@ -124,20 +125,33 @@ class MainFragment : Fragment() {
             }
         }
 
+    private fun showDialog(title: String, message: String) {
+        activity?.let {
+            AlertDialog.Builder(it)
+                .setTitle(title)
+                .setMessage(message)
+                .setNegativeButton(getString(R.string.dialog_button_close)) { dialog, _ -> dialog.dismiss() }
+                .create()
+                .show()
+        }
+    }
+
     private fun getLocation() {
         activity?.let { context ->
             if (ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
+                ) ==
+                PackageManager.PERMISSION_GRANTED
             ) {
-                // Получить мененджер геолокации
+                // Получить менеджер геолокаций
                 val locationManager =
                     context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     val provider = locationManager.getProvider(LocationManager.GPS_PROVIDER)
                     provider?.let {
-                        // Получаем местоположение каждые 60 секунд
+                        // Будем получать геоположение через каждые 60 секунд или каждые 100 метров
                         locationManager.requestLocationUpdates(
                             LocationManager.GPS_PROVIDER,
                             REFRESH_PERIOD,
@@ -168,22 +182,30 @@ class MainFragment : Fragment() {
     }
 
     private val onLocationListener = object : LocationListener {
+
         override fun onLocationChanged(location: Location) {
-            context?.let { context ->
-                getAddressAsync(context, location)
+            context?.let {
+                getAddressAsync(it, location)
             }
         }
 
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-        override fun onProviderDisabled(provider: String) {}
+        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
         override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
     }
 
-    private fun getAddressAsync(context: Context, location: Location) {
-        val geocoder = Geocoder(context)
+    private fun getAddressAsync(
+        context: Context,
+        location: Location
+    ) {
+        val geoCoder = Geocoder(context)
         Thread {
             try {
-                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                val addresses = geoCoder.getFromLocation(
+                    location.latitude,
+                    location.longitude,
+                    1
+                )
                 binding.mainFragmentFAB.post {
                     showAddressDialog(addresses[0].getAddressLine(0), location)
                 }
@@ -218,22 +240,14 @@ class MainFragment : Fragment() {
     private fun openDetailsFragment(
         weather: Weather
     ) {
-        activity?.supportFragmentManager?.let { manager ->
-            manager.beginTransaction()
-                .add(R.id.container, DetailsFragment.newInstance(weather))
+        activity?.supportFragmentManager?.apply {
+            beginTransaction()
+                .add(
+                    R.id.container,
+                    DetailsFragment.newInstance(weather)
+                )
                 .addToBackStack("")
                 .commitAllowingStateLoss()
-        }
-    }
-
-    private fun showDialog(title: String, message: String) {
-        activity?.let {
-            AlertDialog.Builder(it)
-                .setTitle(title)
-                .setMessage(message)
-                .setNegativeButton(getString(R.string.dialog_button_close)) { dialog, _ -> dialog.dismiss() }
-                .create()
-                .show()
         }
     }
 
